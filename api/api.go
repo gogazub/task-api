@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -60,6 +61,8 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, userService *service
 	}
 
 	w.WriteHeader(http.StatusCreated)
+
+	fmt.Fprintf(w, "User %s created!", req.Username)
 }
 
 func HandleLogin(w http.ResponseWriter, r *http.Request, userService *service.UserService) {
