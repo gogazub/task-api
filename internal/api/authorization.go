@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gogazub/app/internal/service"
-	"github.com/gogazub/app/internal/utils"
 )
 
 type LoginResponse struct {
@@ -81,13 +80,13 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, userService *service.Us
 
 func HandleTask(w http.ResponseWriter, r *http.Request, taskService *service.TaskService) {
 	if r.Method != http.MethodPost {
-		utils.WriteJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		writeJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	id, err := taskService.CreateTask()
 	if err != nil {
-		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
