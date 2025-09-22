@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gogazub/hw1/repo"
-	"github.com/gogazub/hw1/service"
-	"github.com/gogazub/hw1/utils"
+	"github.com/gogazub/app/internal/repo"
+	"github.com/gogazub/app/internal/service"
+	"github.com/gogazub/app/internal/utils"
 )
 
 type RegisterRequest struct {
@@ -23,6 +23,7 @@ type LoginRequest struct {
 
 type LoginResponse struct {
 	Token string `json:"token"`
+	Err   string `json:"error"`
 }
 
 type TaskResponse struct {
@@ -38,6 +39,7 @@ type ResultResponse struct {
 }
 
 func HandleRegister(w http.ResponseWriter, r *http.Request, userService *service.UserService) {
+
 	if r.Method != http.MethodPost {
 		utils.WriteJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return

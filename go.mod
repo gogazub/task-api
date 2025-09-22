@@ -1,5 +1,5 @@
-module github.com/gogazub/hw1
+module github.com/gogazub/app
 
 go 1.22.2
 
-require github.com/google/uuid v1.6.0 // indirect
+require github.com/google/uuid v1.6.0

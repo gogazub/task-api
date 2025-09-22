@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogazub/hw1/repo"
-	"github.com/gogazub/hw1/utils"
+	"github.com/gogazub/app/internal/repo"
+	"github.com/gogazub/app/internal/utils"
 )
 
 type TaskService struct {
