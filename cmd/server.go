@@ -63,7 +63,7 @@ func main() {
 }
 
 func printAPIDocumentationReminder() {
-	fmt.Println(`
+	fmt.Print(`
 API Endpoints:
 
 1. POST /register
@@ -78,7 +78,6 @@ API Endpoints:
 
 3. POST /task
    - Creates a new task.
-   - Request body: { "task_data": "string" }
    - Response: { "task_id": "string" }
 
 4. GET /status/{task_id}

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -21,6 +22,9 @@ type ResultResponse struct {
 }
 
 func HandleTaskStatus(w http.ResponseWriter, r *http.Request, taskService *service.TaskService) {
+
+	validateToken(r)
+
 	taskID, valid := handleTaskID(w, r)
 	if !valid {
 		return
@@ -82,4 +86,13 @@ func mapStatusToString(status repo.TaskStatus) string {
 	default:
 		return "unknown"
 	}
+}
+
+func validateToken(r *http.Request) error {
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		return errors.New("authentication failed")
+	}
+
+	return nil
 }

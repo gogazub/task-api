@@ -3,6 +3,8 @@ package repo
 import (
 	"fmt"
 	"sync"
+
+	"github.com/gogazub/app/internal/utils"
 )
 
 type TaskStatus int
@@ -89,7 +91,7 @@ func (r *UserRepo) Login(username, password string) (string, error) {
 		return "", fmt.Errorf("invalid credentials")
 	}
 
-	token := fmt.Sprintf("token_%s", username)
+	token := utils.GenerateUUID()
 
 	r.mu.Lock()
 	r.tokens[token] = username
