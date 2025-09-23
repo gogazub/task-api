@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
@@ -21,16 +22,19 @@ type ResultResponse struct {
 	Result string `json:"result"`
 }
 
-func HandleTaskStatus(w http.ResponseWriter, r *http.Request, taskService *service.TaskService) {
+func HandleTaskStatus(w http.ResponseWriter, r *http.Request, service *service.Service) {
 
-	validateToken(r)
+	if err := validateToken(r, service); err != nil {
+		writeJSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	taskID, valid := handleTaskID(w, r)
 	if !valid {
 		return
 	}
 
-	status, err := taskService.GetTaskStatus(taskID)
+	status, err := service.GetTaskService().GetTaskStatus(taskID)
 	if err != nil {
 		writeJSONError(w, http.StatusNotFound, err.Error())
 		return
@@ -42,13 +46,19 @@ func HandleTaskStatus(w http.ResponseWriter, r *http.Request, taskService *servi
 	writeJSON(w, http.StatusOK, response)
 }
 
-func HandleTaskResult(w http.ResponseWriter, r *http.Request, taskService *service.TaskService) {
+func HandleTaskResult(w http.ResponseWriter, r *http.Request, service *service.Service) {
+
+	if err := validateToken(r, service); err != nil {
+		writeJSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	taskID, valid := handleTaskID(w, r)
 	if !valid {
 		return
 	}
 
-	result, err := taskService.GetTaskResult(taskID)
+	result, err := service.GetTaskService().GetTaskResult(taskID)
 	if err != nil {
 		if strings.Contains(err.Error(), "not ready") {
 			writeJSONError(w, http.StatusAccepted, err.Error()) // статус Accepted если результат не готов
@@ -77,6 +87,29 @@ func handleTaskID(w http.ResponseWriter, r *http.Request) (string, bool) {
 	return pathParts[2], true
 }
 
+func HandleTask(w http.ResponseWriter, r *http.Request, service *service.Service) {
+	if r.Method != http.MethodPost {
+		writeJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	if err := validateToken(r, service); err != nil {
+		writeJSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	id, err := service.GetTaskService().CreateTask()
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response := TaskResponse{TaskID: id}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
+}
+
 func mapStatusToString(status repo.TaskStatus) string {
 	switch status {
 	case repo.InProgress:
@@ -88,11 +121,11 @@ func mapStatusToString(status repo.TaskStatus) string {
 	}
 }
 
-func validateToken(r *http.Request) error {
+func validateToken(r *http.Request, service *service.Service) error {
 	token := r.Header.Get("Authorization")
-	if token == "" {
+
+	if _, ok := service.GetUserService().ValidateToken(token); !ok {
 		return errors.New("authentication failed")
 	}
-
 	return nil
 }

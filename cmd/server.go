@@ -11,31 +11,33 @@ import (
 
 func main() {
 	statusRepo := repo.NewStatusRepo()
-	taskService := service.NewTaskService(statusRepo)
+	//taskService := service.NewTaskService(statusRepo)
 
 	userRepo := repo.NewUserRepo()
-	userService := service.NewUserService(userRepo)
+	//userService := service.NewUserService(userRepo)
+
+	service := service.NewService(statusRepo, userRepo)
 
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /register", func(w http.ResponseWriter, r *http.Request) {
-		api.HandleRegister(w, r, userService)
+		api.HandleRegister(w, r, service)
 	})
 
 	mux.HandleFunc("POST /login", func(w http.ResponseWriter, r *http.Request) {
-		api.HandleLogin(w, r, userService)
+		api.HandleLogin(w, r, service)
 	})
 
 	mux.HandleFunc("POST /task", func(w http.ResponseWriter, r *http.Request) {
-		api.HandleTask(w, r, taskService)
+		api.HandleTask(w, r, service)
 	})
 
 	mux.HandleFunc("GET /status/", func(w http.ResponseWriter, r *http.Request) {
-		api.HandleTaskStatus(w, r, taskService)
+		api.HandleTaskStatus(w, r, service)
 	})
 
 	mux.HandleFunc("GET /result/", func(w http.ResponseWriter, r *http.Request) {
-		api.HandleTaskResult(w, r, taskService)
+		api.HandleTaskResult(w, r, service)
 	})
 
 	// Root endpoint for health check

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/gogazub/app/internal/service"
@@ -21,7 +20,7 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-func HandleRegister(w http.ResponseWriter, r *http.Request, userService *service.UserService) {
+func HandleRegister(w http.ResponseWriter, r *http.Request, service *service.Service) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		writeJSONError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -38,12 +37,12 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, userService *service
 		return
 	}
 
-	if err := userService.Register(req.Username, req.Password); err != nil {
+	if err := service.GetUserService().Register(req.Username, req.Password); err != nil {
 		writeJSONError(w, http.StatusConflict, "user already exists")
 		return
 	}
 
-	token, err := userService.Login(req.Username, req.Password)
+	token, err := service.GetUserService().Login(req.Username, req.Password)
 	if err != nil {
 		writeJSONError(w, http.StatusInternalServerError, "failed to create session")
 		return
@@ -52,7 +51,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, userService *service
 	writeJSON(w, http.StatusCreated, LoginResponse{Token: token})
 }
 
-func HandleLogin(w http.ResponseWriter, r *http.Request, userService *service.UserService) {
+func HandleLogin(w http.ResponseWriter, r *http.Request, service *service.Service) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		writeJSONError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -69,29 +68,11 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, userService *service.Us
 		return
 	}
 
-	token, err := userService.Login(req.Username, req.Password)
+	token, err := service.GetUserService().Login(req.Username, req.Password)
 	if err != nil {
 		writeJSONError(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
 
 	writeJSON(w, http.StatusOK, LoginResponse{Token: token})
-}
-
-func HandleTask(w http.ResponseWriter, r *http.Request, taskService *service.TaskService) {
-	if r.Method != http.MethodPost {
-		writeJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
-	id, err := taskService.CreateTask()
-	if err != nil {
-		writeJSONError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	response := TaskResponse{TaskID: id}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
 }
