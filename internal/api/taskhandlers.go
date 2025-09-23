@@ -25,7 +25,7 @@ type ResultResponse struct {
 func HandleTaskStatus(w http.ResponseWriter, r *http.Request, service *service.Service) {
 
 	if err := validateToken(r, service); err != nil {
-		writeJSONError(w, http.StatusBadRequest, err.Error())
+		writeJSONError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -49,7 +49,7 @@ func HandleTaskStatus(w http.ResponseWriter, r *http.Request, service *service.S
 func HandleTaskResult(w http.ResponseWriter, r *http.Request, service *service.Service) {
 
 	if err := validateToken(r, service); err != nil {
-		writeJSONError(w, http.StatusBadRequest, err.Error())
+		writeJSONError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -94,7 +94,7 @@ func HandleTask(w http.ResponseWriter, r *http.Request, service *service.Service
 	}
 
 	if err := validateToken(r, service); err != nil {
-		writeJSONError(w, http.StatusBadRequest, err.Error())
+		writeJSONError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -125,7 +125,7 @@ func validateToken(r *http.Request, service *service.Service) error {
 	token := r.Header.Get("Authorization")
 
 	if _, ok := service.GetUserService().ValidateToken(token); !ok {
-		return errors.New("authentication failed")
+		return errors.New("Unauthorized")
 	}
 	return nil
 }
