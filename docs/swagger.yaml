@@ -1,0 +1,104 @@
+definitions:
+  api.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  api.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  api.LoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  api.RegisterRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  title: Orders API
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: perform authorization and return session`s token if successful
+      parameters:
+      - description: username + password
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.LoginResponse'
+        "400":
+          description: Invalid JSON
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: Unathorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: login user
+      tags:
+      - auth
+      - user
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Register new user and return token
+      parameters:
+      - description: username + password
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.LoginResponse'
+        "400":
+          description: Invalid JSON
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "409":
+          description: User already exists
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: failed to create session
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Register new user and return token
+      tags:
+      - auth
+      - user
+swagger: "2.0"

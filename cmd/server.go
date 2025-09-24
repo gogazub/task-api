@@ -1,3 +1,4 @@
+// @title Orders API
 package main
 
 import (
@@ -7,26 +8,27 @@ import (
 	"github.com/gogazub/app/internal/api"
 	"github.com/gogazub/app/internal/repo"
 	"github.com/gogazub/app/internal/service"
+	httpSwagger "github.com/swaggo/http-swagger"
+
+	_ "github.com/gogazub/app/docs"
 )
 
 func main() {
 	statusRepo := repo.NewStatusRepo()
-	//taskService := service.NewTaskService(statusRepo)
 
 	userRepo := repo.NewUserRepo()
-	//userService := service.NewUserService(userRepo)
 
 	service := service.NewService(statusRepo, userRepo)
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /register", func(w http.ResponseWriter, r *http.Request) {
-		api.HandleRegister(w, r, service)
-	})
+	mux.HandleFunc("/swagger/", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8000/swagger/doc.json"),
+	))
 
-	mux.HandleFunc("POST /login", func(w http.ResponseWriter, r *http.Request) {
-		api.HandleLogin(w, r, service)
-	})
+	authHandler := &api.AuthHandler{service}
+	mux.HandleFunc("POST /register", authHandler.HandleRegister)
+	mux.HandleFunc("POST /login", authHandler.HandleLogin)
 
 	mux.HandleFunc("POST /task", func(w http.ResponseWriter, r *http.Request) {
 		api.HandleTask(w, r, service)
