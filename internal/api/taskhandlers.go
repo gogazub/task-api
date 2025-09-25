@@ -22,9 +22,63 @@ type ResultResponse struct {
 	Result string `json:"result"`
 }
 
-func HandleTaskStatus(w http.ResponseWriter, r *http.Request, service *service.Service) {
+type TaskHandler struct {
+	Svc *service.Service
+}
 
-	if err := validateToken(r, service); err != nil {
+type TaskRequest struct {
+	Text string `json:"text"`
+}
+
+// @Summary Create new task
+// @Description Create new task and return task`s id
+// @Tags task
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "session's token"
+// @Param body body api.TaskRequest true "task info"
+// @Success 200 {object} TaskResponse
+// @Failure 401 {object} ErrorResponse "Unathorized"
+// @Failure 404 {object} ErrorResponse ""
+// @Failure 405 {object} ErrorResponse "Method not allowed"
+// @Router /task [post]
+func (handler TaskHandler) HandleTask(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	if err := validateToken(r, handler.Svc); err != nil {
+		writeJSONError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	id, err := handler.Svc.GetTaskService().CreateTask()
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response := TaskResponse{TaskID: id}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
+}
+
+// @Summary Return status of task by id
+// @Description Return status of task by id
+// @Tags task
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "session`s token"
+// @Success 200 {object} StatusResponse
+// @Failure 401 {object} ErrorResponse "Unathorized"
+// @Failure 404 {object} ErrorResponse "Status not found"
+// @Failure 405 {object} ErrorResponse "Method not allowed"
+// @Router /status/{id} [post]
+func (handler TaskHandler) HandleTaskStatus(w http.ResponseWriter, r *http.Request) {
+
+	if err := validateToken(r, handler.Svc); err != nil {
 		writeJSONError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
@@ -34,7 +88,7 @@ func HandleTaskStatus(w http.ResponseWriter, r *http.Request, service *service.S
 		return
 	}
 
-	status, err := service.GetTaskService().GetTaskStatus(taskID)
+	status, err := handler.Svc.GetTaskService().GetTaskStatus(taskID)
 	if err != nil {
 		writeJSONError(w, http.StatusNotFound, err.Error())
 		return
@@ -46,9 +100,27 @@ func HandleTaskStatus(w http.ResponseWriter, r *http.Request, service *service.S
 	writeJSON(w, http.StatusOK, response)
 }
 
-func HandleTaskResult(w http.ResponseWriter, r *http.Request, service *service.Service) {
+// @Summary Return result of task by id
+// @Description Return result of task by id
+// @Tags task
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "session`s token"
+// @Success 200 {object} ResultResponse "return result"
+// @Success 202 {object} ResultResponse "task is running"
+// @Failure 401 {object} ErrorResponse "Unathorized"
+// @Failure 404 {object} ErrorResponse "Result not found"
+// @Failure 405 {object} ErrorResponse "Method not allowed"
+// @Router /result/{task_id} [get]
+func (handler TaskHandler) HandleTaskResult(w http.ResponseWriter, r *http.Request) {
 
-	if err := validateToken(r, service); err != nil {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodGet)
+		writeJSONError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	if err := validateToken(r, handler.Svc); err != nil {
 		writeJSONError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
@@ -58,7 +130,7 @@ func HandleTaskResult(w http.ResponseWriter, r *http.Request, service *service.S
 		return
 	}
 
-	result, err := service.GetTaskService().GetTaskResult(taskID)
+	result, err := handler.Svc.GetTaskService().GetTaskResult(taskID)
 	if err != nil {
 		if strings.Contains(err.Error(), "not ready") {
 			writeJSONError(w, http.StatusAccepted, err.Error()) // статус Accepted если результат не готов
@@ -85,29 +157,6 @@ func handleTaskID(w http.ResponseWriter, r *http.Request) (string, bool) {
 	}
 
 	return pathParts[2], true
-}
-
-func HandleTask(w http.ResponseWriter, r *http.Request, service *service.Service) {
-	if r.Method != http.MethodPost {
-		writeJSONError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
-	if err := validateToken(r, service); err != nil {
-		writeJSONError(w, http.StatusUnauthorized, err.Error())
-		return
-	}
-
-	id, err := service.GetTaskService().CreateTask()
-	if err != nil {
-		writeJSONError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	response := TaskResponse{TaskID: id}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
 }
 
 func mapStatusToString(status repo.TaskStatus) string {

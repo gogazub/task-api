@@ -23,6 +23,26 @@ definitions:
       username:
         type: string
     type: object
+  api.ResultResponse:
+    properties:
+      result:
+        type: string
+    type: object
+  api.StatusResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  api.TaskRequest:
+    properties:
+      text:
+        type: string
+    type: object
+  api.TaskResponse:
+    properties:
+      task_id:
+        type: string
+    type: object
 info:
   contact: {}
   title: Orders API
@@ -101,4 +121,113 @@ paths:
       tags:
       - auth
       - user
+  /result/{task_id}:
+    get:
+      consumes:
+      - application/json
+      description: Return result of task by id
+      parameters:
+      - description: session`s token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: return result
+          schema:
+            $ref: '#/definitions/api.ResultResponse'
+        "202":
+          description: task is running
+          schema:
+            $ref: '#/definitions/api.ResultResponse'
+        "401":
+          description: Unathorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Result not found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Return result of task by id
+      tags:
+      - task
+  /status/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Return status of task by id
+      parameters:
+      - description: session`s token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.StatusResponse'
+        "401":
+          description: Unathorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Status not found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Return status of task by id
+      tags:
+      - task
+  /task:
+    post:
+      consumes:
+      - application/json
+      description: Create new task and return task`s id
+      parameters:
+      - description: session's token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: task info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.TaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.TaskResponse'
+        "401":
+          description: Unathorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Create new task
+      tags:
+      - task
 swagger: "2.0"

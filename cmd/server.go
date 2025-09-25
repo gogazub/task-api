@@ -30,17 +30,10 @@ func main() {
 	mux.HandleFunc("POST /register", authHandler.HandleRegister)
 	mux.HandleFunc("POST /login", authHandler.HandleLogin)
 
-	mux.HandleFunc("POST /task", func(w http.ResponseWriter, r *http.Request) {
-		api.HandleTask(w, r, service)
-	})
-
-	mux.HandleFunc("GET /status/", func(w http.ResponseWriter, r *http.Request) {
-		api.HandleTaskStatus(w, r, service)
-	})
-
-	mux.HandleFunc("GET /result/", func(w http.ResponseWriter, r *http.Request) {
-		api.HandleTaskResult(w, r, service)
-	})
+	taskHanler := &api.TaskHandler{Svc: service}
+	mux.HandleFunc("POST /task", taskHanler.HandleTask)
+	mux.HandleFunc("GET /status/", taskHanler.HandleTaskStatus)
+	mux.HandleFunc("GET /result/", taskHanler.HandleTaskResult)
 
 	// Root endpoint for health check
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
