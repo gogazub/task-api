@@ -37,7 +37,7 @@ func (m *JWTManager) GenerateToken(username string) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return token.SignedString(m.Secret)
+	return token.SignedString([]byte(m.Secret))
 
 }
 
@@ -47,7 +47,7 @@ func (m *JWTManager) ParseClaims(tokenString string) (*Claims, error) {
 		tokenString,
 		&Claims{},
 		func(token *jwt.Token) (any, error) {
-			return m.Secret, nil
+			return []byte(m.Secret), nil
 		},
 	)
 	if err != nil {

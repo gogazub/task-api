@@ -174,7 +174,7 @@ func validateToken(r *http.Request, service *service.Service) error {
 	tokenString := r.Header.Get("Authorization")
 	username, err := service.GetUsernameFromToken(tokenString)
 	if err != nil {
-		return nil
+		return err
 	}
 	exists := service.GetUserService().FindUser(username)
 	if !exists {
