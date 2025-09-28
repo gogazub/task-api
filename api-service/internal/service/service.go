@@ -1,16 +1,18 @@
 package service
 
-import "github.com/gogazub/app/internal/repo"
+import (
+	"github.com/gogazub/app/internal/repo"
+)
 
 type Service struct {
 	taskService *TaskService
 	userService *UserService
 }
 
-func NewService(taskRepo *repo.StatusRepo, userRepo *repo.UserRepo) *Service {
+func NewService(taskRepo *repo.StatusRepo, userService *UserService) *Service {
 	return &Service{
 		taskService: NewTaskService(taskRepo),
-		userService: NewUserService(userRepo),
+		userService: userService,
 	}
 }
 
@@ -20,4 +22,9 @@ func (s *Service) GetTaskService() *TaskService {
 
 func (s *Service) GetUserService() *UserService {
 	return s.userService
+}
+
+func (s *Service) GetUsernameFromToken(tokenString string) (string, error) {
+	name, err := s.GetUserService().m.GetName(tokenString)
+	return name, err
 }

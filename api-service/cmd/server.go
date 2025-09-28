@@ -4,6 +4,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gogazub/app/internal/api"
 	"github.com/gogazub/app/internal/repo"
@@ -18,7 +20,15 @@ func main() {
 
 	userRepo := repo.NewUserRepo()
 
-	service := service.NewService(statusRepo, userRepo)
+	cfg := &service.Confing{
+		Secret:        os.Getenv("JWT_SECRET"),
+		TokenDuration: 15 * time.Minute,
+	}
+
+	jwtm := service.NewJWTManager(cfg)
+	userService := service.NewUserService(userRepo, jwtm)
+
+	service := service.NewService(statusRepo, userService)
 
 	mux := http.NewServeMux()
 

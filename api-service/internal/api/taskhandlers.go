@@ -2,7 +2,7 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -171,10 +171,14 @@ func mapStatusToString(status repo.TaskStatus) string {
 }
 
 func validateToken(r *http.Request, service *service.Service) error {
-	token := r.Header.Get("Authorization")
-
-	if _, ok := service.GetUserService().ValidateToken(token); !ok {
-		return errors.New("Unauthorized")
+	tokenString := r.Header.Get("Authorization")
+	username, err := service.GetUsernameFromToken(tokenString)
+	if err != nil {
+		return nil
+	}
+	exists := service.GetUserService().FindUser(username)
+	if !exists {
+		return fmt.Errorf("no such user: %s", username)
 	}
 	return nil
 }

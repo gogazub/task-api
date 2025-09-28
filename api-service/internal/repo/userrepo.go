@@ -3,24 +3,21 @@ package repo
 import (
 	"fmt"
 	"sync"
-
-	"github.com/gogazub/app/internal/utils"
 )
 
 type UserRepo struct {
-	mu     sync.RWMutex
-	users  map[string]string // username:password
-	tokens map[string]string // token:username
+	mu    sync.RWMutex
+	users map[string]string // username:hash
 }
 
 func NewUserRepo() *UserRepo {
 	return &UserRepo{
-		users:  make(map[string]string),
-		tokens: make(map[string]string),
+		users: make(map[string]string),
 	}
 }
 
-func (r *UserRepo) Register(username, password string) error {
+func (r *UserRepo) Save(username, hash string) error {
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -28,32 +25,21 @@ func (r *UserRepo) Register(username, password string) error {
 		return fmt.Errorf("user already exists")
 	}
 
-	r.users[username] = password
+	r.users[username] = hash
 	return nil
 }
 
-func (r *UserRepo) Login(username, password string) (string, error) {
+func (r *UserRepo) GetHash(username string) (string, error) {
 	r.mu.RLock()
-	storedPassword, exists := r.users[username]
+	storedHash, exists := r.users[username]
 	r.mu.RUnlock()
-
-	if !exists || storedPassword != password {
-		return "", fmt.Errorf("invalid credentials")
+	if !exists {
+		return storedHash, fmt.Errorf("user: %s doesn`t exists", username)
 	}
-
-	token := utils.GenerateUUID()
-
-	r.mu.Lock()
-	r.tokens[token] = username
-	r.mu.Unlock()
-
-	return token, nil
+	return storedHash, nil
 }
 
-func (r *UserRepo) ValidateToken(token string) (string, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	username, exists := r.tokens[token]
-	return username, exists
+func (r *UserRepo) Find(username string) bool {
+	_, exists := r.users[username]
+	return exists
 }

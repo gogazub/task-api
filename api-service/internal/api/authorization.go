@@ -53,17 +53,11 @@ func (handler *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := handler.GetUserService().Register(req.Username, req.Password); err != nil {
-		writeJSONError(w, http.StatusConflict, "user already exists")
-		return
-	}
-
-	token, err := handler.GetUserService().Login(req.Username, req.Password)
+	token, err := handler.GetUserService().Register(req.Username, req.Password)
 	if err != nil {
-		writeJSONError(w, http.StatusInternalServerError, "failed to create session")
+		writeJSONError(w, http.StatusConflict, err.Error())
 		return
 	}
-
 	writeJSON(w, http.StatusCreated, LoginResponse{Token: token})
 }
 

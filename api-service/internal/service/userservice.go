@@ -1,23 +1,66 @@
 package service
 
-import "github.com/gogazub/app/internal/repo"
+import (
+	"errors"
+
+	"github.com/gogazub/app/internal/repo"
+	"golang.org/x/crypto/bcrypt"
+)
 
 type UserService struct {
-	repo *repo.UserRepo
+	users *repo.UserRepo
+	m     JWTManager
 }
 
-func NewUserService(repo *repo.UserRepo) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(users *repo.UserRepo, manager *JWTManager) *UserService {
+	return &UserService{
+		users: users,
+		m:     *manager,
+	}
 }
 
-func (s *UserService) Register(username, password string) error {
-	return s.repo.Register(username, password)
+func (s *UserService) Register(username, password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+
+	token, err := s.m.GenerateToken(username)
+	if err != nil {
+		return "", err
+	}
+
+	err = s.users.Save(username, string(hash))
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
 
 func (s *UserService) Login(username, password string) (string, error) {
-	return s.repo.Login(username, password)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	storedHash, err := s.users.GetHash(username)
+	if err != nil {
+		return "", err
+	}
+
+	if string(hash) != storedHash {
+		return "", errors.New("invalid credentials")
+	}
+
+	token, err := s.m.GenerateToken(username)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+
 }
 
-func (s *UserService) ValidateToken(token string) (string, bool) {
-	return s.repo.ValidateToken(token)
+func (s *UserService) FindUser(username string) bool {
+	return s.users.Find(username)
 }
