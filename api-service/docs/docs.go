@@ -147,6 +147,13 @@ const docTemplate = `{
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Task id",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -184,7 +191,7 @@ const docTemplate = `{
             }
         },
         "/status/{id}": {
-            "post": {
+            "get": {
                 "description": "Return status of task by id",
                 "consumes": [
                     "application/json"
@@ -202,6 +209,13 @@ const docTemplate = `{
                         "description": "session` + "`" + `s token",
                         "name": "Authorization",
                         "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "task_id",
+                        "name": "task_id",
+                        "in": "path",
                         "required": true
                     }
                 ],

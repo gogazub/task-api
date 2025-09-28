@@ -132,6 +132,11 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: Task id
+        in: path
+        name: task_id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -159,7 +164,7 @@ paths:
       tags:
       - task
   /status/{id}:
-    post:
+    get:
       consumes:
       - application/json
       description: Return status of task by id
@@ -167,6 +172,11 @@ paths:
       - description: session`s token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: task_id
+        in: path
+        name: task_id
         required: true
         type: string
       produces:

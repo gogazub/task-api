@@ -71,12 +71,19 @@ func (handler TaskHandler) HandleTask(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "session`s token"
+// @Param task_id path string true "task_id"
 // @Success 200 {object} StatusResponse
 // @Failure 401 {object} ErrorResponse "Unathorized"
 // @Failure 404 {object} ErrorResponse "Status not found"
 // @Failure 405 {object} ErrorResponse "Method not allowed"
-// @Router /status/{id} [post]
+// @Router /status/{id} [get]
 func (handler TaskHandler) HandleTaskStatus(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		writeJSONError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
 
 	if err := validateToken(r, handler.Svc); err != nil {
 		writeJSONError(w, http.StatusUnauthorized, err.Error())
@@ -106,6 +113,7 @@ func (handler TaskHandler) HandleTaskStatus(w http.ResponseWriter, r *http.Reque
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "session`s token"
+// @Param task_id path string true "Task id"
 // @Success 200 {object} ResultResponse "return result"
 // @Success 202 {object} ResultResponse "task is running"
 // @Failure 401 {object} ErrorResponse "Unathorized"
@@ -114,7 +122,7 @@ func (handler TaskHandler) HandleTaskStatus(w http.ResponseWriter, r *http.Reque
 // @Router /result/{task_id} [get]
 func (handler TaskHandler) HandleTaskResult(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		writeJSONError(w, http.StatusMethodNotAllowed, "method not allowed")
 		return
