@@ -10,7 +10,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
-func test() {
+func Test() {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		log.Fatal(err)
