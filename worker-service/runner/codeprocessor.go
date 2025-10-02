@@ -8,13 +8,13 @@ import (
 
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
-	"github.com/gogazub/consumer/code"
+	"github.com/gogazub/consumer/model"
 )
 
 type CodeProcessor struct {
 }
 
-func (cp *CodeProcessor) RunCode(code code.CodeMessage) {
+func (cp *CodeProcessor) RunCode(code model.CodeMessage) {
 
 }
 

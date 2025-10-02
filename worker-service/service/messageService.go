@@ -1,19 +1,19 @@
-package consumer
+package service
 
 import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gogazub/consumer/code"
-	"github.com/gogazub/consumer/processor"
+	"github.com/gogazub/consumer/model"
+	runner "github.com/gogazub/consumer/runner"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type MessageProcessor struct {
-	processor *processor.CodeProcessor
+	processor *runner.CodeProcessor
 }
 
-func NewMessageProcessor(processor *processor.CodeProcessor) *MessageProcessor {
+func NewMessageProcessor(processor *runner.CodeProcessor) *MessageProcessor {
 	return &MessageProcessor{processor: processor}
 }
 
@@ -26,8 +26,8 @@ func (mp *MessageProcessor) Accept(msg amqp.Delivery) error {
 	return nil
 }
 
-func getCodeMessage(msg amqp.Delivery) (*code.CodeMessage, error) {
-	var codeMessage code.CodeMessage
+func getCodeMessage(msg amqp.Delivery) (*model.CodeMessage, error) {
+	var codeMessage model.CodeMessage
 	err := json.Unmarshal(msg.Body, &codeMessage)
 	if err != nil {
 		return nil, err

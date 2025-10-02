@@ -1,4 +1,4 @@
-package code
+package model
 
 type CodeMessage struct {
 	Code string `json:"code"`

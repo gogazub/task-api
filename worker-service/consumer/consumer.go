@@ -7,10 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gogazub/consumer/service"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func StartConsumer(messageProcessor *MessageProcessor) {
+func StartConsumer(messageProcessor *service.MessageProcessor) {
 	user, password, adress, port := getFullAdress()
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", user, password, adress, port))
 	if err != nil {
