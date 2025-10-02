@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -11,46 +10,11 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type CodeMessage struct {
-	Code string `json:"code"`
-}
-
-type MessageProcessor struct {
-}
-
-func GetCodeMessage(msg amqp.Delivery) (*CodeMessage, error) {
-	var codeMessage CodeMessage
-	err := json.Unmarshal(msg.Body, &codeMessage)
-	if err != nil {
-		return nil, err
-	}
-	return &codeMessage, nil
-}
-
-func (mp *MessageProcessor) Process(msg amqp.Delivery) error {
-	codeMessage, err := GetCodeMessage(msg)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Recived msg: %s", codeMessage.Code)
-	return nil
-}
-
-func getFullAdress() (user, password, adress, port string) {
-	user = os.Getenv("RABBITMQ_USER")
-	password = os.Getenv("RABBITMQ_PASSWORD")
-	adress = os.Getenv("RABBITMQ_ADRESS")
-	port = os.Getenv("RABBITMQ_PORT")
-	return
-}
-
 func StartConsumer(messageProcessor *MessageProcessor) {
-
 	user, password, adress, port := getFullAdress()
-
-	conn, err := amqp.Dial(fmt.Sprint("amqp://%s:%s@%s:%es/", user, password, adress, port))
+	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", user, password, adress, port))
 	if err != nil {
-		log.Printf(err.Error())
+		fmt.Println(err.Error())
 		return
 	}
 	defer conn.Close()
@@ -81,11 +45,19 @@ func StartConsumer(messageProcessor *MessageProcessor) {
 				log.Printf("Channel is closed")
 				return
 			}
-			messageProcessor.Process(msg)
+			messageProcessor.Accept(msg)
 			log.Printf("Recivied message: %s\n", msg.Body)
 		case <-quit:
 			log.Print("Shutting down gracefully...")
 			return
 		}
 	}
+}
+
+func getFullAdress() (user, password, adress, port string) {
+	user = os.Getenv("RABBITMQ_USER")
+	password = os.Getenv("RABBITMQ_PASSWORD")
+	adress = os.Getenv("RABBITMQ_ADRESS")
+	port = os.Getenv("RABBITMQ_PORT")
+	return
 }

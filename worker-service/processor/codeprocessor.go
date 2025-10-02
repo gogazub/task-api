@@ -8,7 +8,15 @@ import (
 
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
+	"github.com/gogazub/consumer/code"
 )
+
+type CodeProcessor struct {
+}
+
+func (cp *CodeProcessor) RunCode(code code.CodeMessage) {
+
+}
 
 func Test() {
 	cli, err := client.NewClientWithOpts(client.FromEnv)

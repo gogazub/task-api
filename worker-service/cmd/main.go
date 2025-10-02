@@ -1,7 +1,5 @@
-package cmd
-
-import processor "github.com/gogazub/consumer/runner"
+package main
 
 func main() {
-	processor.Test()
+
 }
