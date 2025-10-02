@@ -29,7 +29,7 @@ func StartConsumer(messageProcessor *service.MessageService) error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("start consume...")
 	msgs, err := ch.Consume(q.Name, "code_runner", true, false, false, false, nil)
 	if err != nil {
 		return err
@@ -54,6 +54,7 @@ func StartConsumer(messageProcessor *service.MessageService) error {
 }
 
 func getFullAdress() (user, password, adress, port string) {
+
 	user = os.Getenv("RABBITMQ_USER")
 	password = os.Getenv("RABBITMQ_PASSWORD")
 	adress = os.Getenv("RABBITMQ_ADRESS")
