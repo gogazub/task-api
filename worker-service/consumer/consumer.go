@@ -11,29 +11,28 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func StartConsumer(messageProcessor *service.MessageProcessor) {
+func StartConsumer(messageProcessor *service.MessageService) error {
 	user, password, adress, port := getFullAdress()
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", user, password, adress, port))
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return err
 	}
 	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {
-		log.Println(err.Error())
+		return err
 	}
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare("code_to_run", false, false, false, false, nil)
 	if err != nil {
-		log.Println(err.Error())
+		return err
 	}
 
 	msgs, err := ch.Consume(q.Name, "code_runner", true, false, false, false, nil)
 	if err != nil {
-		log.Println(err.Error())
+		return err
 	}
 
 	quit := make(chan os.Signal, 1)
@@ -43,14 +42,13 @@ func StartConsumer(messageProcessor *service.MessageProcessor) {
 		select {
 		case msg, ok := <-msgs:
 			if !ok {
-				log.Printf("Channel is closed")
-				return
+				return err
 			}
 			messageProcessor.Accept(msg)
 			log.Printf("Recivied message: %s\n", msg.Body)
 		case <-quit:
 			log.Print("Shutting down gracefully...")
-			return
+			return err
 		}
 	}
 }

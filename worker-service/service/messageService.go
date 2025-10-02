@@ -9,15 +9,15 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type MessageProcessor struct {
-	processor *runner.CodeProcessor
+type MessageService struct {
+	processor *runner.CodeRunner
 }
 
-func NewMessageProcessor(processor *runner.CodeProcessor) *MessageProcessor {
-	return &MessageProcessor{processor: processor}
+func NewMessageProcessor(processor *runner.CodeRunner) *MessageService {
+	return &MessageService{processor: processor}
 }
 
-func (mp *MessageProcessor) Accept(msg amqp.Delivery) error {
+func (mp *MessageService) Accept(msg amqp.Delivery) error {
 	codeMessage, err := getCodeMessage(msg)
 	if err != nil {
 		return err

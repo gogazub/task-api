@@ -1,7 +1,8 @@
-package processor
+package runner
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -11,11 +12,15 @@ import (
 	"github.com/gogazub/consumer/model"
 )
 
-type CodeProcessor struct {
+type CodeRunner struct {
 }
 
-func (cp *CodeProcessor) RunCode(code model.CodeMessage) {
+func NewCodeProcessor() *CodeRunner {
+	return &CodeRunner{}
+}
 
+func (cp *CodeRunner) RunCode(cm model.CodeMessage) {
+	fmt.Printf("Mock: accepted code: %s to run", cm.Code)
 }
 
 func Test() {
