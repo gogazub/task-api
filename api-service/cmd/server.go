@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -10,12 +11,14 @@ import (
 	"github.com/gogazub/app/internal/api"
 	"github.com/gogazub/app/internal/repo"
 	"github.com/gogazub/app/internal/service"
+	"github.com/joho/godotenv"
 	httpSwagger "github.com/swaggo/http-swagger"
 
 	_ "github.com/gogazub/app/docs"
 )
 
 func main() {
+	_ = godotenv.Load()
 	statusRepo := repo.NewStatusRepo()
 
 	userRepo := repo.NewUserRepo()
@@ -28,7 +31,12 @@ func main() {
 	jwtm := service.NewJWTManager(cfg)
 	userService := service.NewUserService(userRepo, jwtm)
 
-	service := service.NewService(statusRepo, userService)
+	producer, err := service.NewProducer()
+	if err != nil {
+		log.Panicf("producer start error: %s", err.Error())
+	}
+
+	service := service.NewService(statusRepo, userService, producer)
 
 	mux := http.NewServeMux()
 
@@ -53,7 +61,7 @@ func main() {
 
 	fmt.Println("Server starting on :8000")
 
-	err := http.ListenAndServe(":8000", mux)
+	err = http.ListenAndServe(":8000", mux)
 	if err != nil {
 		fmt.Printf("Server failed to start: %v\n", err)
 	}

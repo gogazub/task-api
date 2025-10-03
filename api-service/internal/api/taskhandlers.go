@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gogazub/app/internal/model"
 	"github.com/gogazub/app/internal/repo"
 	"github.com/gogazub/app/internal/service"
 )
@@ -63,6 +64,12 @@ func (handler TaskHandler) HandleTask(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
+
+	var taskPayload model.Task
+
+	json.NewDecoder(r.Body).Decode(&taskPayload)
+
+	handler.Svc.GetProducer().SendMessage(taskPayload)
 }
 
 // @Summary Return status of task by id
