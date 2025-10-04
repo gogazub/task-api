@@ -81,7 +81,7 @@ func (handler TaskHandler) HandleTask(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "session`s token"
-// @Param task_id path string true "task_id"
+// @Param task_id path string true "Task ID"
 // @Success 200 {object} StatusResponse
 // @Failure 401 {object} ErrorResponse "Unathorized"
 // @Failure 404 {object} ErrorResponse "Status not found"

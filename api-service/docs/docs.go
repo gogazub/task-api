@@ -213,7 +213,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "task_id",
+                        "description": "Task ID",
                         "name": "task_id",
                         "in": "path",
                         "required": true

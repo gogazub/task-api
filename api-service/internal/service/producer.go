@@ -19,6 +19,8 @@ type Producer struct {
 
 func NewProducer() (*Producer, error) {
 	user, password, adress, port := getFullAdress()
+
+	//fmt.Printf("amqp://%s:%s@%s:%s/", user, password, adress, port)
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", user, password, adress, port))
 	if err != nil {
 		fmt.Printf("dial error: %s", err.Error())

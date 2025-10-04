@@ -174,7 +174,7 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: task_id
+      - description: Task ID
         in: path
         name: task_id
         required: true

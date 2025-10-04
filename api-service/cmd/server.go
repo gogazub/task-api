@@ -33,7 +33,7 @@ func main() {
 
 	producer, err := service.NewProducer()
 	if err != nil {
-		log.Panicf("producer start error: %s", err.Error())
+		log.Printf("producer start error: %s", err.Error())
 	}
 	defer producer.Close()
 
