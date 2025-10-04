@@ -33,14 +33,14 @@ definitions:
       status:
         type: string
     type: object
-  api.TaskRequest:
-    properties:
-      text:
-        type: string
-    type: object
   api.TaskResponse:
     properties:
       task_id:
+        type: string
+    type: object
+  model.Task:
+    properties:
+      code:
         type: string
     type: object
 info:
@@ -212,12 +212,12 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: task info
+      - description: code to run
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/api.TaskRequest'
+          $ref: '#/definitions/model.Task'
       produces:
       - application/json
       responses:

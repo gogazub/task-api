@@ -37,7 +37,7 @@ type TaskRequest struct {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "session's token"
-// @Param body body api.TaskRequest true "task info"
+// @Param body body model.Task true "code to run"
 // @Success 200 {object} TaskResponse
 // @Failure 401 {object} ErrorResponse "Unathorized"
 // @Failure 404 {object} ErrorResponse ""
@@ -60,16 +60,19 @@ func (handler TaskHandler) HandleTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var taskPayload model.Task
+	json.NewDecoder(r.Body).Decode(&taskPayload)
+	err = handler.Svc.GetProducer().SendMessage(taskPayload)
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	response := TaskResponse{TaskID: id}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
 
-	var taskPayload model.Task
-
-	json.NewDecoder(r.Body).Decode(&taskPayload)
-
-	handler.Svc.GetProducer().SendMessage(taskPayload)
 }
 
 // @Summary Return status of task by id

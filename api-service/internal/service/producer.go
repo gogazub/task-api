@@ -21,21 +21,22 @@ func NewProducer() (*Producer, error) {
 	user, password, adress, port := getFullAdress()
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", user, password, adress, port))
 	if err != nil {
+		fmt.Printf("dial error: %s", err.Error())
 		return nil, err
 	}
-	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {
+		fmt.Printf("channel creation error: %s", err.Error())
 		return nil, err
 	}
-	defer ch.Close()
 
 	q, err := ch.QueueDeclare("code_to_run", false, false, false, false, nil)
 	if err != nil {
+		fmt.Printf("queue declaration error: %s", err.Error())
 		return nil, err
 	}
-
+	fmt.Println("Producer starting")
 	return &Producer{
 		conn: conn,
 		ch:   ch,
@@ -45,7 +46,7 @@ func NewProducer() (*Producer, error) {
 }
 
 func (p *Producer) SendMessage(task model.Task) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	body := []byte(task.Code)
@@ -54,6 +55,7 @@ func (p *Producer) SendMessage(task model.Task) error {
 		Body:        body,
 	})
 	if err != nil {
+		log.Printf("publish error: %s", err.Error())
 		return err
 	}
 	log.Printf("Send %s", body)
@@ -67,4 +69,9 @@ func getFullAdress() (user, password, adress, port string) {
 	adress = os.Getenv("RABBITMQ_ADRESS")
 	port = os.Getenv("RABBITMQ_PORT")
 	return
+}
+
+func (pr *Producer) Close() {
+	pr.ch.Close()
+	pr.conn.Close()
 }

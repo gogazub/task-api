@@ -35,6 +35,7 @@ func main() {
 	if err != nil {
 		log.Panicf("producer start error: %s", err.Error())
 	}
+	defer producer.Close()
 
 	service := service.NewService(statusRepo, userService, producer)
 

@@ -269,12 +269,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "task info",
+                        "description": "code to run",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.TaskRequest"
+                            "$ref": "#/definitions/model.Task"
                         }
                     }
                 ],
@@ -362,18 +362,18 @@ const docTemplate = `{
                 }
             }
         },
-        "api.TaskRequest": {
-            "type": "object",
-            "properties": {
-                "text": {
-                    "type": "string"
-                }
-            }
-        },
         "api.TaskResponse": {
             "type": "object",
             "properties": {
                 "task_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Task": {
+            "type": "object",
+            "properties": {
+                "code": {
                     "type": "string"
                 }
             }
