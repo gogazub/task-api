@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/gogazub/app/internal/repo"
 	"github.com/gogazub/app/internal/utils"
@@ -24,7 +23,7 @@ func (s *TaskService) CreateTask() (string, error) {
 		return "", fmt.Errorf("failed to create task: %w", err)
 	}
 
-	go s.processTask(id)
+	//go s.processTask(id)
 
 	return id, nil
 }
@@ -37,17 +36,18 @@ func (s *TaskService) GetTaskStatus(id string) (repo.TaskStatus, error) {
 	return status, nil
 }
 
-func (s *TaskService) processTask(id string) {
-	time.Sleep(5 * time.Second)
+/*
+	func (s *TaskService) processTask(id string) {
+		time.Sleep(5 * time.Second)
 
-	err := s.repo.UpdateStatus(id, repo.Ready)
-	if err != nil {
-		fmt.Printf("Error updating task status: %v\n", err)
+		err := s.repo.UpdateStatus(id, repo.Ready)
+		if err != nil {
+			fmt.Printf("Error updating task status: %v\n", err)
+		}
+
+		fmt.Printf("Task %s is ready\n", id)
 	}
-
-	fmt.Printf("Task %s is ready\n", id)
-}
-
+*/
 func (s *TaskService) GetTaskResult(id string) (string, error) {
 	status, exists := s.repo.GetStatus(id)
 	if !exists {

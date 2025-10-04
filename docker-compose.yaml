@@ -11,6 +11,9 @@ services:
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - RABBITMQ_ADRESS=${RABBITMQ_ADRESS}
       - RABBITMQ_PORT=${RABBITMQ_PORT}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
 
   rabbitmq: 
@@ -20,4 +23,9 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     
