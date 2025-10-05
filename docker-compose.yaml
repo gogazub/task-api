@@ -28,4 +28,16 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    
+
+
+  runner:
+    container_name: runner
+    build: worker-service
+    environment:
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_ADRESS=${RABBITMQ_ADRESS}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
