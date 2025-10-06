@@ -4,37 +4,68 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"os"
+	"time"
 
-	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/gogazub/consumer/model"
 )
 
 type CodeRunner struct {
+	cli *client.Client
 }
 
-func NewCodeProcessor() *CodeRunner {
-	return &CodeRunner{}
-}
-
-func (cp *CodeRunner) RunCode(cm model.CodeMessage) {
-	fmt.Printf("Mock: accepted code: %s to run", cm.Code)
-}
-
-func Test() {
+func NewCodeRunner() (*CodeRunner, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	defer cli.Close()
+	return &CodeRunner{cli: cli}, nil
+}
 
-	res, err := cli.ImagePull(context.Background(), "hello-world", image.PullOptions{})
+func (r *CodeRunner) RunCode(cm model.CodeMessage) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	const image = "gcc:14-bookworm"
+
+	resp, err := r.cli.ContainerCreate(ctx, &container.Config{
+		Image:     image,
+		Cmd:       []string{"bash", "-lc", "g++ -O2 -std=c++17 -x c++ - -o /tmp/a.out && /tmp/a.out"},
+		Tty:       false,
+		OpenStdin: true,
+	}, nil, nil, nil, "")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	defer res.Close()
 
-	io.Copy(os.Stdout, res)
+	attach, err := r.cli.ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
+		Stream: true, Stdin: true, Stdout: true, Stderr: true,
+	})
+	if err != nil {
+		return err
+	}
+	defer attach.Close()
+
+	_, _ = attach.Conn.Write([]byte(cm.Code))
+	attach.CloseWrite()
+
+	if err := r.cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return err
+	}
+
+	go func() {
+		_, _ = io.Copy(os.Stdout, attach.Reader)
+	}()
+
+	_, errCh := r.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	err = <-errCh
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("container finished:", resp.ID)
+	return nil
 }
