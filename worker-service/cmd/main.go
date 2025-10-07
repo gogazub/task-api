@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/gogazub/consumer/consumer"
@@ -11,11 +12,18 @@ import (
 
 func main() {
 	_ = godotenv.Load()
-	cr := runner.NewCodeProcessor()
+
+	runner.Test()
+	return
+	cr, err := runner.NewCodeRunner()
+	if err != nil {
+		fmt.Printf("CodeRunner creation error: %s", err.Error())
+		return
+	}
 
 	mp := service.NewMessageProcessor(cr)
 
-	err := consumer.StartConsumer(mp)
+	err = consumer.StartConsumer(mp)
 	if err != nil {
 		log.Println(err.Error())
 	}
