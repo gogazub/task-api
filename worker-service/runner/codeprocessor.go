@@ -9,6 +9,7 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/gogazub/consumer/model"
 )
 
@@ -27,7 +28,9 @@ func NewCodeRunner() (*CodeRunner, error) {
 func (r *CodeRunner) RunCode(cm model.CodeMessage) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	//x, err := r.cli.ImageList(ctx, image.ListOptions{})
 
+	//fmt.Printf("Available images: %v\n", x)
 	const image = "gcc:14-bookworm"
 	fmt.Print("Create container\n")
 	resp, err := r.cli.ContainerCreate(ctx, &container.Config{
@@ -35,14 +38,17 @@ func (r *CodeRunner) RunCode(cm model.CodeMessage) error {
 		Cmd:       []string{"bash", "-lc", "g++ -O2 -std=c++17 -x c++ - -o /tmp/a.out && /tmp/a.out"},
 		Tty:       false,
 		OpenStdin: true,
+		StdinOnce: true,
 	}, nil, nil, nil, "")
 	if err != nil {
 		return err
 	}
 	fmt.Print("Container created\n")
 
+	ctxIO, cancelIO := context.WithCancel(context.Background())
+	defer cancelIO()
 	fmt.Print("Attach to container\n")
-	attach, err := r.cli.ContainerAttach(ctx, resp.ID, container.AttachOptions{
+	attach, err := r.cli.ContainerAttach(ctxIO, resp.ID, container.AttachOptions{
 		Stream: true, Stdin: true, Stdout: true, Stderr: true,
 	})
 	if err != nil {
@@ -51,8 +57,12 @@ func (r *CodeRunner) RunCode(cm model.CodeMessage) error {
 	defer attach.Close()
 
 	fmt.Print("Write code to container\n")
-	_, _ = attach.Conn.Write([]byte(cm.Code))
-	attach.CloseWrite()
+	if _, err := io.WriteString(attach.Conn, cm.Code); err != nil {
+		return fmt.Errorf("write stdin: %w", err)
+	}
+	if err := attach.CloseWrite(); err != nil {
+		return fmt.Errorf("close stdin: %w", err)
+	}
 
 	fmt.Print("Start container\n")
 	if err := r.cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
@@ -61,7 +71,7 @@ func (r *CodeRunner) RunCode(cm model.CodeMessage) error {
 	fmt.Print("Container started\n")
 
 	go func() {
-		_, _ = io.Copy(os.Stdout, attach.Reader)
+		_, _ = stdcopy.StdCopy(os.Stdout, os.Stderr, attach.Reader)
 	}()
 	fmt.Print("Container wait\n")
 	_, errCh := r.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
@@ -76,7 +86,7 @@ func (r *CodeRunner) RunCode(cm model.CodeMessage) error {
 
 func Test() {
 	code := `
-#include<isotream>
+#include<iostream>
 
 int main(){
 	std::cout << "Hello, from container!";
@@ -92,5 +102,9 @@ int main(){
 	}
 	codemsg := model.CodeMessage{Code: code}
 	fmt.Print("Run code...\n")
-	cr.RunCode(codemsg)
+	err = cr.RunCode(codemsg)
+	if err != nil {
+		fmt.Printf("RunCode error: %s", err.Error())
+		return
+	}
 }
