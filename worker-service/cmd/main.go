@@ -13,8 +13,8 @@ import (
 func main() {
 	_ = godotenv.Load()
 
-	runner.Test()
-	return
+	// runner.Test()
+	// return
 	cr, err := runner.NewCodeRunner()
 	if err != nil {
 		fmt.Printf("CodeRunner creation error: %s", err.Error())
