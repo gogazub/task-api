@@ -1,0 +1,2 @@
+DROP tasks
+DROP results
