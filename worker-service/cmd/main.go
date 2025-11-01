@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"os"
 
 	"github.com/gogazub/consumer/consumer"
 	"github.com/gogazub/consumer/runner"
@@ -11,20 +11,23 @@ import (
 )
 
 func main() {
-	_ = godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+		log.Printf("warning: no .env loaded: %v", err)
+	}
 
 	// runner.Test()
 	// return
+
 	cr, err := runner.NewCodeRunner()
 	if err != nil {
-		fmt.Printf("CodeRunner creation error: %s", err.Error())
-		return
+		log.Printf("launch error: %v", err)
+		os.Exit(1)
 	}
 
 	mp := service.NewMessageProcessor(cr)
 
 	err = consumer.StartConsumer(mp)
 	if err != nil {
-		log.Println(err.Error())
+		log.Printf("launch error: %v", err)
 	}
 }

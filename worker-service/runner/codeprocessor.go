@@ -17,6 +17,7 @@ type CodeRunner struct {
 	cli *client.Client
 }
 
+// NewCodeRunner create new CodeRunner
 func NewCodeRunner() (*CodeRunner, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
@@ -28,9 +29,7 @@ func NewCodeRunner() (*CodeRunner, error) {
 func (r *CodeRunner) RunCode(cm model.CodeMessage) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	//x, err := r.cli.ImageList(ctx, image.ListOptions{})
 
-	//fmt.Printf("Available images: %v\n", x)
 	const image = "gcc:14-bookworm"
 	fmt.Print("Create container\n")
 	resp, err := r.cli.ContainerCreate(ctx, &container.Config{

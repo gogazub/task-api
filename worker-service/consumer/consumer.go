@@ -14,16 +14,28 @@ import (
 func StartConsumer(messageProcessor *service.MessageService) error {
 	user, password, adress, port := getFullAdress()
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", user, password, adress, port))
+
 	if err != nil {
-		return err
+		return fmt.Errorf("start consumer error: %w", err)
 	}
-	defer conn.Close()
+	defer func() {
+		err = conn.Close()
+		if err != nil {
+			log.Printf("warning: %s", err.Error())
+		}
+	}()
 
 	ch, err := conn.Channel()
 	if err != nil {
 		return err
 	}
-	defer ch.Close()
+
+	defer func() {
+		err = ch.Close()
+		if err != nil {
+			log.Printf("warning: %s", err.Error())
+		}
+	}()
 
 	q, err := ch.QueueDeclare("code_to_run", false, false, false, false, nil)
 	if err != nil {
@@ -35,6 +47,7 @@ func StartConsumer(messageProcessor *service.MessageService) error {
 		return err
 	}
 
+	// TODO: вынести в main
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
@@ -44,7 +57,10 @@ func StartConsumer(messageProcessor *service.MessageService) error {
 			if !ok {
 				return err
 			}
-			messageProcessor.Accept(msg)
+			err := messageProcessor.Accept(msg)
+			if err != nil {
+				return fmt.Errorf("consumer error: %w", err)
+			}
 			log.Printf("Recivied message: %s\n", msg.Body)
 		case <-quit:
 			log.Print("Shutting down gracefully...")
