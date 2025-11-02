@@ -6,10 +6,10 @@ import (
 )
 
 type ResultService struct {
-	repo *repo.ResultRepository
+	repo repo.IResultRepository
 }
 
-func NewResultService(repo *repo.ResultRepository) *ResultService {
+func NewResultService(repo repo.ResultRepository) *ResultService {
 	return &ResultService{repo: repo}
 }
 

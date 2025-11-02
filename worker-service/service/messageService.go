@@ -10,10 +10,10 @@ import (
 )
 
 type MessageService struct {
-	processor *runner.CodeRunner
+	processor runner.ICodeRunner
 }
 
-func NewMessageProcessor(processor *runner.CodeRunner) *MessageService {
+func NewMessageProcessor(processor runner.CodeRunner) *MessageService {
 	return &MessageService{processor: processor}
 }
 

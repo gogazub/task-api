@@ -13,6 +13,10 @@ import (
 	"github.com/gogazub/consumer/model"
 )
 
+type ICodeRunner interface {
+	RunCode(cm model.CodeMessage) error
+}
+
 type CodeRunner struct {
 	cli *client.Client
 }
@@ -26,7 +30,7 @@ func NewCodeRunner() (*CodeRunner, error) {
 	return &CodeRunner{cli: cli}, nil
 }
 
-func (r *CodeRunner) RunCode(cm model.CodeMessage) error {
+func (r CodeRunner) RunCode(cm model.CodeMessage) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

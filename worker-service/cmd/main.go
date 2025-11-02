@@ -24,7 +24,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	mp := service.NewMessageProcessor(cr)
+	mp := service.NewMessageProcessor(*cr)
 
 	err = consumer.StartConsumer(mp)
 	if err != nil {
