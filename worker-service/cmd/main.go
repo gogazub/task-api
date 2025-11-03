@@ -15,16 +15,13 @@ func main() {
 		log.Printf("warning: no .env loaded: %v", err)
 	}
 
-	// runner.Test()
-	// return
-
 	cr, err := runner.NewCodeRunner()
 	if err != nil {
 		log.Printf("launch error: %v", err)
 		os.Exit(1)
 	}
 
-	mp := service.NewMessageProcessor(*cr)
+	mp := service.NewMessageService(*cr)
 
 	err = consumer.StartConsumer(mp)
 	if err != nil {

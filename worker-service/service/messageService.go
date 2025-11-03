@@ -13,7 +13,7 @@ type MessageService struct {
 	processor runner.ICodeRunner
 }
 
-func NewMessageProcessor(processor runner.CodeRunner) *MessageService {
+func NewMessageService(processor runner.CodeRunner) *MessageService {
 	return &MessageService{processor: processor}
 }
 
