@@ -11,6 +11,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+// StartConsumer connect to kafka and start main loop
 func StartConsumer(messageProcessor *service.MessageService) error {
 	user, password, adress, port := getFullAdress()
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", user, password, adress, port))
@@ -69,6 +70,7 @@ func StartConsumer(messageProcessor *service.MessageService) error {
 	}
 }
 
+// getFullAdress
 func getFullAdress() (user, password, adress, port string) {
 
 	user = os.Getenv("RABBITMQ_USER")

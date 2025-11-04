@@ -9,6 +9,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+// MessageService accepts message from kafka and send them to CodeRunner
 type MessageService struct {
 	processor runner.ICodeRunner
 }

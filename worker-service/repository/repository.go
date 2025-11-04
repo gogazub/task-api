@@ -2,11 +2,12 @@ package repository
 
 import "github.com/gogazub/consumer/model"
 
+// IResultRepository - save result of the execution to DB.
 type IResultRepository interface {
 	Save(result model.Result)
 }
 
-// Only save result
+// ResultRepository - save result of the execution to DB.
 type ResultRepository struct {
 	// conn to psql
 }
