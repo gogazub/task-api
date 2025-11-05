@@ -11,7 +11,7 @@ type ResultService struct {
 	repo repo.IResultRepository
 }
 
-func NewResultService(repo repo.ResultRepository) *ResultService {
+func NewResultService(repo repo.IResultRepository) *ResultService {
 	return &ResultService{repo: repo}
 }
 
