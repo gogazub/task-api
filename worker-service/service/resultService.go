@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/gogazub/consumer/model"
 	repo "github.com/gogazub/consumer/repository"
 )
@@ -15,5 +17,7 @@ func NewResultService(repo repo.ResultRepository) *ResultService {
 
 func (svc *ResultService) Save(stdout, stderr []byte) {
 	resultModel := model.Result{Error: stderr, Output: stdout}
-	svc.repo.Save(resultModel)
+	ctx := context.Background()
+	
+	svc.repo.Save(ctx, resultModel)
 }
