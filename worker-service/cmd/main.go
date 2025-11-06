@@ -40,8 +40,8 @@ func main() {
 	log.Println("Successfully connected to database")
 
 	repo := repository.NewOrderRepository(db) 
-	resService := service.NewResultService(repo)
-	mp := service.NewMessageService(*cr)
+
+	mp := service.NewMessageService(*cr, repo)
 
 	err = consumer.StartConsumer(mp)
 	if err != nil {

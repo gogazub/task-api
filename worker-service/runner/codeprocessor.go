@@ -1,10 +1,10 @@
 package runner
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/docker/docker/api/types/container"
@@ -14,7 +14,7 @@ import (
 )
 
 type ICodeRunner interface {
-	RunCode(cm model.CodeMessage) error
+	RunCode(cm model.CodeMessage) model.Result 
 }
 
 // CodeRunner executes code in docker container. Redirects stderr and stdout from container
@@ -32,7 +32,7 @@ func NewCodeRunner() (*CodeRunner, error) {
 }
 
 // RunCode creates docker container and execute code
-func (r CodeRunner) RunCode(cm model.CodeMessage) error {
+func (r CodeRunner) RunCode(cm model.CodeMessage) model.Result {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -46,7 +46,7 @@ func (r CodeRunner) RunCode(cm model.CodeMessage) error {
 		StdinOnce: true,
 	}, nil, nil, nil, "")
 	if err != nil {
-		return err
+		return model.Result{Error: []byte(err.Error())}
 	}
 	fmt.Print("Container created\n")
 
@@ -57,59 +57,48 @@ func (r CodeRunner) RunCode(cm model.CodeMessage) error {
 		Stream: true, Stdin: true, Stdout: true, Stderr: true,
 	})
 	if err != nil {
-		return err
+		return model.Result{Error: []byte(err.Error())}
 	}
 	defer attach.Close()
 
 	fmt.Print("Write code to container\n")
 	if _, err := io.WriteString(attach.Conn, cm.Code); err != nil {
-		return fmt.Errorf("write stdin: %w", err)
+		return model.Result{Error: []byte(fmt.Sprintf("write stdin: %v", err))}
 	}
 	if err := attach.CloseWrite(); err != nil {
-		return fmt.Errorf("close stdin: %w", err)
+		return model.Result{Error: []byte(fmt.Sprintf("close stdin: %v", err))}
 	}
 
 	fmt.Print("Start container\n")
 	if err := r.cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
-		return err
+		return model.Result{Error: []byte(err.Error())}
 	}
 	fmt.Print("Container started\n")
 
-	go func() {
-		_, _ = stdcopy.StdCopy(os.Stdout, os.Stderr, attach.Reader)
-	}()
+	var stdoutBuf, stderrBuf bytes.Buffer
+
+	fmt.Print("Copy container output\n")
+	_, err = stdcopy.StdCopy(&stdoutBuf, &stderrBuf, attach.Reader)
+	if err != nil {
+		return model.Result{Error: []byte(fmt.Sprintf("copy output: %v", err))}
+	}
+
 	fmt.Print("Container wait\n")
 	_, errCh := r.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	err = <-errCh
 	if err != nil {
-		return err
+		return model.Result{
+			Error:  []byte(err.Error()),
+			Output: stdoutBuf.Bytes(),
+		}
 	}
 
 	fmt.Println("container finished:", resp.ID)
-	return nil
-}
-
-func Test() {
-	code := `
-#include<iostream>
-
-int main(){
-	std::cout << "Hello, from container!";
-	return 0;
-}		
-`
-
-	cr, err := NewCodeRunner()
-	fmt.Print("Code runner created\n")
-	if err != nil {
-		fmt.Printf("CodeRunner creation error: %s", err.Error())
-		return
-	}
-	codemsg := model.CodeMessage{Code: code}
-	fmt.Print("Run code...\n")
-	err = cr.RunCode(codemsg)
-	if err != nil {
-		fmt.Printf("RunCode error: %s", err.Error())
-		return
+	
+	return model.Result{
+		Output: stdoutBuf.Bytes(),
+		Error:  stderrBuf.Bytes(),
 	}
 }
+
+
