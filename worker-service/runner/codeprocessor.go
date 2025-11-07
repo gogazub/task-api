@@ -31,7 +31,7 @@ func NewCodeRunner() (*CodeRunner, error) {
 	return &CodeRunner{cli: cli}, nil
 }
 
-// RunCode creates docker container and execute code
+// RunCode run code in container and return model.Result
 func (r CodeRunner) RunCode(cm model.CodeMessage) model.Result {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -88,6 +88,7 @@ func (r CodeRunner) RunCode(cm model.CodeMessage) model.Result {
 	err = <-errCh
 	if err != nil {
 		return model.Result{
+			Id : cm.Id,
 			Error:  []byte(err.Error()),
 			Output: stdoutBuf.Bytes(),
 		}

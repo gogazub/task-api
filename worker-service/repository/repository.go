@@ -38,7 +38,7 @@ func (r ResultRepository) Save(ctx context.Context,result model.Result) error{
 		}
 	}()
 
-	_, err = r.db.ExecContext(ctx,  "INSERT INTO results (stderr, stdout) VALUES ($1, $2) RETURNING id",result.Error,result.Output)
+	_, err = r.db.ExecContext(ctx,  "INSERT INTO results (id, stderr, stdout) VALUES ($1, $2, $3)",result.Id, result.Error,result.Output)
 	if err != nil {
 		return fmt.Errorf("save result error: %v",err.Error())
 	}

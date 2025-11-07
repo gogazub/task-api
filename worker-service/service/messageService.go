@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gogazub/consumer/model"
@@ -22,12 +23,13 @@ func NewMessageService(processor runner.CodeRunner, repository repository.IResul
 	return &MessageService{processor: processor, repository: repository}
 }
 
+// Accept consume messages from rabbitMQ and send them to code runner
 func (mp *MessageService) Accept(msg amqp.Delivery) error {
 	codeMessage, err := getCodeMessage(msg)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Recived msg: %s", codeMessage.Code)
+	log.Printf("Recived msg: %s", codeMessage.Code)
 	result := mp.processor.RunCode(*codeMessage)
 	ctx, _ := context.WithTimeout(context.Background(),1*time.Minute)
 	err = mp.SaveResult(ctx, result)
@@ -35,6 +37,7 @@ func (mp *MessageService) Accept(msg amqp.Delivery) error {
 	return nil
 }
 
+// getCodeMessage converts rabbitMQ message to model.CodeMessage
 func getCodeMessage(msg amqp.Delivery) (*model.CodeMessage, error) {
 	var codeMessage model.CodeMessage
 	err := json.Unmarshal(msg.Body, &codeMessage)
