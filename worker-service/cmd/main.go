@@ -39,7 +39,7 @@ func main() {
 
 	log.Println("Successfully connected to database")
 
-	repo := repository.NewOrderRepository(db) 
+	repo := repository.NewOrderRepository(db)
 
 	mp := service.NewMessageService(*cr, repo)
 
@@ -52,7 +52,7 @@ func main() {
 func connectToDB() *sql.DB {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=%s",
 		os.Getenv("POSTGRES_HOST"),
-		os.Getenv("POSTGRES_PORT"), 
+		os.Getenv("POSTGRES_PORT"),
 		os.Getenv("POSTGRES_USER"),
 		os.Getenv("POSTGRES_DB"),
 		os.Getenv("POSTGRES_SSLMODE"),
