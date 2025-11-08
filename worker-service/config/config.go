@@ -7,6 +7,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var Cfg Config
+
 type Config struct {
 	// --- Server ---
 
@@ -15,6 +17,7 @@ type Config struct {
 	RABBITMQ_PASSWORD string
 	RABBITMQ_ADDRESS  string
 	RABBITMQ_PORT     string
+	RABBITMQ_URL      string
 
 	// --- Postgres ---
 	POSTGRES_USER     string
@@ -29,12 +32,12 @@ type Config struct {
 }
 
 // InitConfig loads environment variables from .env to the Config struct
-func InitConfig() (*Config, error) {
+func InitConfig() error {
 	if err := godotenv.Load(); err != nil {
-		return nil, fmt.Errorf("init config error: %w", err)
+		return fmt.Errorf("init config error: %w", err)
 	}
 
-	config := &Config{
+	Cfg = Config{
 		// --- RabbitMQ ---
 		RABBITMQ_USER:     getEnv("RABBITMQ_USER"),
 		RABBITMQ_PASSWORD: getEnv("RABBITMQ_PASSWORD"),
@@ -50,9 +53,10 @@ func InitConfig() (*Config, error) {
 		POSTGRES_SSLMODE:  getEnv("POSTGRES_SSLMODE", "disable"),
 	}
 
-	config.DATABASE_URL = buildDatabaseURL(config)
+	buildDatabaseURL(&Cfg)
+	buildRabbitMQURL(&Cfg)
 
-	return config, nil
+	return nil
 }
 
 func getEnv(key string, defaultValue ...string) string {
@@ -63,9 +67,10 @@ func getEnv(key string, defaultValue ...string) string {
 	return value
 }
 
-func buildDatabaseURL(c *Config) string {
+// init Database url like "postgres://postgres:password@localhost:8080/mydb?sslmode=false"
+func buildDatabaseURL(c *Config) {
 	if c.POSTGRES_USER != "" && c.POSTGRES_PASSWORD != "" {
-		return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
 			c.POSTGRES_USER,
 			c.POSTGRES_PASSWORD,
 			c.POSTGRES_HOST,
@@ -73,13 +78,26 @@ func buildDatabaseURL(c *Config) string {
 			c.POSTGRES_DB,
 			c.POSTGRES_SSLMODE,
 		)
+		c.DATABASE_URL = url
+		return
 	}
 
-	return fmt.Sprintf("postgres://%s@%s:%s/%s?sslmode=%s",
+	url := fmt.Sprintf("postgres://%s@%s:%s/%s?sslmode=%s",
 		c.POSTGRES_USER,
 		c.POSTGRES_HOST,
 		c.POSTGRES_PORT,
 		c.POSTGRES_DB,
 		c.POSTGRES_SSLMODE,
 	)
+	c.DATABASE_URL = url
+}
+
+// init rabbitmq url like "amqp://user:password@localhost:5672/"
+func buildRabbitMQURL(c *Config) {
+	user := c.RABBITMQ_USER
+	password := c.RABBITMQ_PASSWORD
+	address := c.RABBITMQ_ADDRESS
+	port := c.RABBITMQ_PORT
+	url := fmt.Sprintf("amqp://%s:%s@%s:%s/", user, password, address, port)
+	c.RABBITMQ_URL = url
 }

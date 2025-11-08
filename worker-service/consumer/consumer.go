@@ -1,25 +1,13 @@
 package consumer
 
 import (
-	"os"
-
 	"github.com/gogazub/consumer/service"
 )
 
-// getFullAdress
-func getFullAdress() (user, password, adress, port string) {
-
-	user = os.Getenv("RABBITMQ_USER")
-	password = os.Getenv("RABBITMQ_PASSWORD")
-	adress = os.Getenv("RABBITMQ_ADRESS")
-	port = os.Getenv("RABBITMQ_PORT")
-	return
-}
-
 // Start starts receiving task from RabbitMQ
 func Start(messageProcessor *service.MessageService) error {
-	// user, password, adress, port := getFullAdress()
-	// conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", user, password, adress, port))
+	// url := config.Cfg.RABBITMQ_URL
+	// conn, err := amqp.Dial(url)
 
 	// if err != nil {
 	// 	return fmt.Errorf("start consumer error: %w", err)
