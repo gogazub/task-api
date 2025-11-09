@@ -13,37 +13,28 @@ import (
 
 func main() {
 	err := config.InitConfig()
+	must(err)
+
+	codeRunner, err := runner.NewCodeRunner()
+	must(err)
+
+	db := repository.ConnectToDB()
+	must(err)
+	defer db.Close()
+
+	err = db.Ping()
+	must(err)
+
+	orderRepo := repository.NewOrderRepository(db)
+	msgService := service.NewMessageService(*codeRunner, orderRepo)
+
+	taskConsumer := consumer.NewTaskConsumer(msgService)
+
+}
+
+func must(err error) {
 	if err != nil {
 		log.Printf(err.Error())
 		os.Exit(1)
-	}
-
-	cr, err := runner.NewCodeRunner()
-	if err != nil {
-		log.Printf("launch error: %v", err)
-		os.Exit(1)
-	}
-
-	db := repository.ConnectToDB()
-	if db == nil {
-		log.Printf("failed to connect to database")
-		os.Exit(1)
-	}
-	defer db.Close()
-
-	if err := db.Ping(); err != nil {
-		log.Printf("database ping error: %v", err)
-		os.Exit(1)
-	}
-
-	log.Println("Successfully connected to database")
-
-	repo := repository.NewOrderRepository(db)
-
-	mp := service.NewMessageService(*cr, repo)
-
-	err = consumer.StartConsumer(mp)
-	if err != nil {
-		log.Printf("launch error: %v", err)
 	}
 }
