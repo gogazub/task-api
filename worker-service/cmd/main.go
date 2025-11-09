@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -29,6 +30,11 @@ func main() {
 	msgService := service.NewMessageService(*codeRunner, orderRepo)
 
 	taskConsumer := consumer.NewTaskConsumer(msgService)
+	taskConsumer.Connect(config.Cfg.RABBITMQ_URL)
+	taskConsumerCtx, taskConsumerCancel := context.WithCancel(context.Background())
+	go func() {
+		taskConsumer.StartConsuming(taskConsumerCtx)
+	}()
 
 }
 

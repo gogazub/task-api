@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// TODO: global object -> dependency injection
 var Cfg Config
 
 type Config struct {
