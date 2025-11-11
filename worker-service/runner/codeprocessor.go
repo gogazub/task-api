@@ -14,7 +14,7 @@ import (
 )
 
 type ICodeRunner interface {
-	RunCode(cm model.CodeMessage) model.Result 
+	RunCode(cm model.Task) model.ExecutionResult
 }
 
 // CodeRunner executes code in docker container. Redirects stderr and stdout from container
@@ -32,7 +32,7 @@ func NewCodeRunner() (*CodeRunner, error) {
 }
 
 // RunCode run code in container and return model.Result
-func (r CodeRunner) RunCode(cm model.CodeMessage) model.Result {
+func (r CodeRunner) RunCode(cm model.Task) model.ExecutionResult {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -46,7 +46,7 @@ func (r CodeRunner) RunCode(cm model.CodeMessage) model.Result {
 		StdinOnce: true,
 	}, nil, nil, nil, "")
 	if err != nil {
-		return model.Result{Error: []byte(err.Error())}
+		return model.ExecutionResult{Error: err.Error()}
 	}
 	fmt.Print("Container created\n")
 
@@ -57,21 +57,21 @@ func (r CodeRunner) RunCode(cm model.CodeMessage) model.Result {
 		Stream: true, Stdin: true, Stdout: true, Stderr: true,
 	})
 	if err != nil {
-		return model.Result{Error: []byte(err.Error())}
+		return model.ExecutionResult{Error: err.Error()}
 	}
 	defer attach.Close()
 
 	fmt.Print("Write code to container\n")
 	if _, err := io.WriteString(attach.Conn, cm.Code); err != nil {
-		return model.Result{Error: []byte(fmt.Sprintf("write stdin: %v", err))}
+		return model.ExecutionResult{Error: fmt.Sprintf("write stdin: %v", err)}
 	}
 	if err := attach.CloseWrite(); err != nil {
-		return model.Result{Error: []byte(fmt.Sprintf("close stdin: %v", err))}
+		return model.ExecutionResult{Error: fmt.Sprintf("close stdin: %v", err)}
 	}
 
 	fmt.Print("Start container\n")
 	if err := r.cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
-		return model.Result{Error: []byte(err.Error())}
+		return model.ExecutionResult{Error: err.Error()}
 	}
 	fmt.Print("Container started\n")
 
@@ -80,26 +80,24 @@ func (r CodeRunner) RunCode(cm model.CodeMessage) model.Result {
 	fmt.Print("Copy container output\n")
 	_, err = stdcopy.StdCopy(&stdoutBuf, &stderrBuf, attach.Reader)
 	if err != nil {
-		return model.Result{Error: []byte(fmt.Sprintf("copy output: %v", err))}
+		return model.ExecutionResult{Error: fmt.Sprintf("copy output: %v", err)}
 	}
 
 	fmt.Print("Container wait\n")
 	_, errCh := r.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	err = <-errCh
 	if err != nil {
-		return model.Result{
-			Id : cm.Id,
-			Error:  []byte(err.Error()),
-			Output: stdoutBuf.Bytes(),
+		return model.ExecutionResult{
+			TaskID: cm.ID,
+			Error:  err.Error(),
+			Output: stdoutBuf.String(),
 		}
 	}
 
 	fmt.Println("container finished:", resp.ID)
-	
-	return model.Result{
-		Output: stdoutBuf.Bytes(),
-		Error:  stderrBuf.Bytes(),
+
+	return model.ExecutionResult{
+		Output: stdoutBuf.String(),
+		Error:  stderrBuf.String(),
 	}
 }
-
-

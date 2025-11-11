@@ -14,7 +14,7 @@ import (
 
 // IResultRepository - save result of the execution to DB.
 type IResultRepository interface {
-	Save(ctx context.Context, result model.Result) error
+	Save(ctx context.Context, result model.ExecutionResult) error
 }
 
 // ResultRepository - save result of the execution to DB.
@@ -26,7 +26,7 @@ func NewOrderRepository(db *sql.DB) *ResultRepository {
 	return &ResultRepository{db: db}
 }
 
-func (r ResultRepository) Save(ctx context.Context, result model.Result) error {
+func (r ResultRepository) Save(ctx context.Context, result model.ExecutionResult) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func (r ResultRepository) Save(ctx context.Context, result model.Result) error {
 		}
 	}()
 
-	_, err = r.db.ExecContext(ctx, "INSERT INTO results (id, stderr, stdout) VALUES ($1, $2, $3)", result.Id, result.Error, result.Output)
+	_, err = r.db.ExecContext(ctx, "INSERT INTO results (id, status, output, error, exit_code, duration) VALUES ($1, $2, $3, $4, $5, $6)", result.TaskID, result.Status, result.Output, result.Error, result.ExitCode, result.Duration)
 	if err != nil {
 		return fmt.Errorf("save result error: %v", err.Error())
 	}

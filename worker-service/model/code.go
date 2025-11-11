@@ -1,8 +1,7 @@
 package model
 
-// CodeMessage - model that contains code to execute.
-type CodeMessage struct {
-	Id string `json:"id"`
-	Code string `json:"code"`
-
+type Task struct {
+	ID       string `json:"id"`
+	Code     string `json:"code"`
+	Language string `json:"language"`
 }
